@@ -39,7 +39,7 @@ static Layer *s_background_layer;
 
 static void play_timer(void);
 static void toggle_timer(void);
-static void handle_timer_expired(bool should_vibrate);
+static void handle_timer_expired(void);
 static GRect centered_icon_rect_in_slot(int slot_index, GRect sidebar_bounds,
                                         GSize icon_size);
 
@@ -123,19 +123,18 @@ static void auto_advance_after_wait_callback(void *context) {
   toggle_timer();
 }
 
-static void handle_timer_expired(bool should_vibrate) {
-  if (should_vibrate) {
-    static const uint32_t strong_triple_segments[] = {
-        400, 200, 400, 200, 400, 800, 400, 200, 400, 200, 400};
-    static const VibePattern strong_triple_pattern = {
-        .durations = strong_triple_segments,
-        .num_segments = ARRAY_LENGTH(strong_triple_segments),
-    };
-    vibes_enqueue_custom_pattern(strong_triple_pattern);
-  }
+static void handle_timer_expired() {
+  static const uint32_t strong_triple_segments[] = {
+      400, 200, 400, 200, 400, 800, 400, 200, 400, 200, 400};
+  static const VibePattern strong_triple_pattern = {
+      .durations = strong_triple_segments,
+      .num_segments = ARRAY_LENGTH(strong_triple_segments),
+  };
+  vibes_enqueue_custom_pattern(strong_triple_pattern);
 
   tick_timer_service_unsubscribe();
 
+  // TODO: do I need this here?
   if (s_play_start_delay_timer) {
     app_timer_cancel(s_play_start_delay_timer);
     s_play_start_delay_timer = NULL;
@@ -176,7 +175,7 @@ static void on_second_tick(struct tm *tick_time, TimeUnits units_changed) {
   }
 
   cancel_wakeup();
-  handle_timer_expired(true);
+  handle_timer_expired();
 }
 
 static void begin_second_tick_callback(void *context) {
@@ -446,7 +445,7 @@ static void init(void) {
 
   if (launch_reason() == APP_LAUNCH_WAKEUP) {
     cancel_wakeup();
-    handle_timer_expired(true);
+    handle_timer_expired();
   }
 
   if (s_state.timer_state == TIMER_STATE_PLAYING) {
