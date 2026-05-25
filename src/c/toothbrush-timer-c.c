@@ -23,7 +23,6 @@ static AppState s_state;
 static Window *s_main_window;
 static TextLayer *s_remaining_label;
 static TextLayer *s_duration_label;
-static Layer *s_sidebar_layer;
 static BitmapLayer *s_toggle_icon_layer;
 static BitmapLayer *s_play_pause_icon_layer;
 static GBitmap *s_play_bitmap;
@@ -36,6 +35,7 @@ static char s_remaining_text[8];
 static char s_duration_text[8];
 static WakeupId s_wakeup_id = -1;
 static Layer *s_background_layer;
+static TextLayer *s_sidebar_layer;
 
 static void play_timer(void);
 static void toggle_timer(void);
@@ -69,7 +69,8 @@ static void set_play_pause_icon_visible(bool visible) {
 
 static void set_sidebar_icon(BitmapLayer *icon_layer, int slot_index,
                              GBitmap *bitmap) {
-  GRect sidebar_bounds = layer_get_bounds(s_sidebar_layer);
+  GRect sidebar_bounds =
+      layer_get_bounds(text_layer_get_layer(s_sidebar_layer));
   layer_set_frame(bitmap_layer_get_layer(icon_layer),
                   centered_icon_rect_in_slot(slot_index, sidebar_bounds,
                                              gbitmap_get_bounds(bitmap).size));
@@ -133,12 +134,6 @@ static void handle_timer_expired() {
   vibes_enqueue_custom_pattern(strong_triple_pattern);
 
   tick_timer_service_unsubscribe();
-
-  // TODO: do I need this here?
-  if (s_play_start_delay_timer) {
-    app_timer_cancel(s_play_start_delay_timer);
-    s_play_start_delay_timer = NULL;
-  }
 
   s_state.timer_state = TIMER_STATE_PAUSED;
   set_toggle_reset_icon_visible(false);
@@ -281,13 +276,6 @@ static void click_config_provider(void *context) {
   window_single_click_subscribe(BUTTON_ID_DOWN, play_pause_click_handler);
 }
 
-// TODO: swap to a text layer?
-static void sidebar_layer_update_proc(Layer *layer, GContext *ctx) {
-  GRect sidebar_bounds = layer_get_bounds(layer);
-  graphics_context_set_fill_color(ctx, GColorBlack);
-  graphics_fill_rect(ctx, sidebar_bounds, 0, GCornerNone);
-}
-
 static GRect centered_icon_rect_in_slot(int slot_index, GRect sidebar_bounds,
                                         GSize icon_size) {
   int slot_height = sidebar_bounds.size.h / ICON_SLOT_COUNT;
@@ -347,11 +335,12 @@ static void main_window_load(Window *window) {
 
   GRect sidebar_rect = GRect(root_bounds.size.w - SIDEBAR_WIDTH, 0,
                              SIDEBAR_WIDTH, root_bounds.size.h);
-  s_sidebar_layer = layer_create(sidebar_rect);
-  layer_set_update_proc(s_sidebar_layer, sidebar_layer_update_proc);
-  layer_add_child(root_layer, s_sidebar_layer);
+  s_sidebar_layer = text_layer_create(sidebar_rect);
+  text_layer_set_background_color(s_sidebar_layer, GColorBlack);
+  layer_add_child(root_layer, text_layer_get_layer(s_sidebar_layer));
 
-  GRect sidebar_bounds = layer_get_bounds(s_sidebar_layer);
+  GRect sidebar_bounds =
+      layer_get_bounds(text_layer_get_layer(s_sidebar_layer));
 
   bool show_reset_icon = s_state.timer_state == TIMER_STATE_PAUSED &&
                          s_state.duration_sec != s_state.remaining_sec;
@@ -362,7 +351,8 @@ static void main_window_load(Window *window) {
   bitmap_layer_set_compositing_mode(s_toggle_icon_layer, GCompOpSet);
   set_sidebar_icon(s_toggle_icon_layer, 0, toggle_reset_bitmap);
   set_toggle_reset_icon_visible(s_state.timer_state == TIMER_STATE_PAUSED);
-  layer_add_child(s_sidebar_layer, bitmap_layer_get_layer(s_toggle_icon_layer));
+  layer_add_child(text_layer_get_layer(s_sidebar_layer),
+                  bitmap_layer_get_layer(s_toggle_icon_layer));
 
   GBitmap *play_pause_bitmap = s_state.timer_state == TIMER_STATE_PAUSED
                                    ? s_play_bitmap
@@ -372,7 +362,7 @@ static void main_window_load(Window *window) {
   bitmap_layer_set_compositing_mode(s_play_pause_icon_layer, GCompOpSet);
   set_sidebar_icon(s_play_pause_icon_layer, 2, play_pause_bitmap);
   set_play_pause_icon_visible(s_state.remaining_sec != 0);
-  layer_add_child(s_sidebar_layer,
+  layer_add_child(text_layer_get_layer(s_sidebar_layer),
                   bitmap_layer_get_layer(s_play_pause_icon_layer));
 
   window_set_click_config_provider(window, click_config_provider);
@@ -382,9 +372,10 @@ static void main_window_load(Window *window) {
 
 static void main_window_unload(Window *window) {
   text_layer_destroy(s_remaining_label);
+  text_layer_destroy(s_duration_label);
+  text_layer_destroy(s_sidebar_layer);
   bitmap_layer_destroy(s_toggle_icon_layer);
   bitmap_layer_destroy(s_play_pause_icon_layer);
-  layer_destroy(s_sidebar_layer);
   layer_destroy(s_background_layer);
 }
 
