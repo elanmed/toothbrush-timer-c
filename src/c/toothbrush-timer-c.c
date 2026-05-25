@@ -347,11 +347,8 @@ static void main_window_load(Window *window) {
       0, sidebar_bounds, gbitmap_get_bounds(s_toggle_bitmap).size));
   bitmap_layer_set_bitmap(s_toggle_icon_layer, s_toggle_bitmap);
   bitmap_layer_set_compositing_mode(s_toggle_icon_layer, GCompOpSet);
-  bool show_toggle_icon = s_state.timer_state == TIMER_STATE_PAUSED &&
-                          s_state.duration_sec == s_state.remaining_sec;
-  if (!show_toggle_icon) {
-    layer_set_hidden(bitmap_layer_get_layer(s_toggle_icon_layer), true);
-  }
+  set_toggle_icon_visible(s_state.timer_state == TIMER_STATE_PAUSED &&
+                          s_state.duration_sec == s_state.remaining_sec);
   layer_add_child(s_sidebar_layer, bitmap_layer_get_layer(s_toggle_icon_layer));
 
   GBitmap *play_pause_bitmap;
@@ -365,10 +362,7 @@ static void main_window_load(Window *window) {
       1, sidebar_bounds, gbitmap_get_bounds(play_pause_bitmap).size));
   bitmap_layer_set_bitmap(s_play_pause_icon_layer, play_pause_bitmap);
   bitmap_layer_set_compositing_mode(s_play_pause_icon_layer, GCompOpSet);
-  bool show_play_pause_icon = s_auto_advance_timer == NULL;
-  if (!show_play_pause_icon) {
-    layer_set_hidden(bitmap_layer_get_layer(s_play_pause_icon_layer), true);
-  }
+  set_play_pause_icon_visible(s_auto_advance_timer == NULL);
   layer_add_child(s_sidebar_layer,
                   bitmap_layer_get_layer(s_play_pause_icon_layer));
 
@@ -376,11 +370,8 @@ static void main_window_load(Window *window) {
       2, sidebar_bounds, gbitmap_get_bounds(s_reset_bitmap).size));
   bitmap_layer_set_bitmap(s_reset_icon_layer, s_reset_bitmap);
   bitmap_layer_set_compositing_mode(s_reset_icon_layer, GCompOpSet);
-  bool show_reset_icon = s_state.timer_state == TIMER_STATE_PAUSED &&
-                         s_state.duration_sec != s_state.remaining_sec;
-  if (!show_reset_icon) {
-    layer_set_hidden(bitmap_layer_get_layer(s_reset_icon_layer), true);
-  }
+  set_reset_icon_visible(s_state.timer_state == TIMER_STATE_PAUSED &&
+                         s_state.duration_sec != s_state.remaining_sec);
   layer_add_child(s_sidebar_layer, bitmap_layer_get_layer(s_reset_icon_layer));
 
   window_set_click_config_provider(window, click_config_provider);
