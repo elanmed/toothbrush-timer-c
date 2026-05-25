@@ -253,10 +253,10 @@ static void toggle_timer(void) {
 
 static void toggle_reset_click_handler(ClickRecognizerRef recognizer,
                                        void *context) {
-  bool icon_is_hidden =
-      layer_get_hidden(bitmap_layer_get_layer(s_toggle_icon_layer));
-  if (icon_is_hidden)
+  if (layer_get_hidden(bitmap_layer_get_layer(s_toggle_icon_layer))) {
     return;
+  }
+
   if (s_state.duration_sec == s_state.remaining_sec) {
     toggle_timer();
   } else {
@@ -266,9 +266,7 @@ static void toggle_reset_click_handler(ClickRecognizerRef recognizer,
 
 static void play_pause_click_handler(ClickRecognizerRef recognizer,
                                      void *context) {
-  bool play_pause_icon_is_hidden =
-      layer_get_hidden(bitmap_layer_get_layer(s_play_pause_icon_layer));
-  if (play_pause_icon_is_hidden) {
+  if (layer_get_hidden(bitmap_layer_get_layer(s_play_pause_icon_layer))) {
     return;
   }
 
