@@ -267,12 +267,6 @@ static void click_config_provider(void *context) {
   window_single_click_subscribe(BUTTON_ID_DOWN, reset_click_handler);
 }
 
-static void wakeup_handler(WakeupId wakeup_id, int32_t cookie) {
-  s_wakeup_id = -1;
-  persist_delete(PERSIST_KEY_WAKEUP_ID);
-  handle_timer_expired(true);
-}
-
 // TODO: swap to a text layer?
 static void sidebar_layer_update_proc(Layer *layer, GContext *ctx) {
   GRect sidebar_bounds = layer_get_bounds(layer);
@@ -429,7 +423,10 @@ static void init(void) {
                                             });
   window_stack_push(s_main_window, true);
 
-  wakeup_service_subscribe(wakeup_handler);
+  if (launch_reason() == APP_LAUNCH_WAKEUP) {
+    cancel_wakeup();
+    handle_timer_expired(true);
+  }
 
   if (s_state.timer_state == TIMER_STATE_PLAYING) {
     play_timer();
