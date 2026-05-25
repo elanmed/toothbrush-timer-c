@@ -1,28 +1,58 @@
 {
-  "name": "toothbrush-timer-c",
-  "author": "MakeAwesomeHappen",
-  "version": "1.0.0",
+  "author": "elanmed",
+  "dependencies": {},
   "keywords": [
     "pebble-app"
   ],
-  "private": true,
-  "dependencies": {},
+  "name": "toothbrush-timer",
   "pebble": {
-    "displayName": "toothbrush-timer-c",
-    "uuid": "56278a4c-a524-4a06-844f-a60abf6c6c5d",
-    "sdkVersion": "3",
+    "displayName": "Toothbrush Timer",
     "enableMultiJS": true,
+    "messageKeys": [],
+    "projectType": "native",
+    "resources": {
+      "media": [
+        {
+          "file": "images/pause.png",
+          "name": "IMAGE_PAUSE",
+          "targetPlatforms": null,
+          "type": "bitmap"
+        },
+        {
+          "file": "images/play.png",
+          "name": "IMAGE_PLAY",
+          "targetPlatforms": null,
+          "type": "bitmap"
+        },
+        {
+          "file": "images/reset.png",
+          "name": "IMAGE_RESET",
+          "targetPlatforms": null,
+          "type": "bitmap"
+        },
+        {
+          "file": "images/toggle.png",
+          "name": "IMAGE_TOGGLE",
+          "targetPlatforms": null,
+          "type": "bitmap"
+        },
+        {
+          "file": "images/logo.png",
+          "menuIcon": true,
+          "name": "IMAGE_LOGO",
+          "targetPlatforms": null,
+          "type": "bitmap"
+        }
+      ]
+    },
+    "sdkVersion": "3",
     "targetPlatforms": [
       "emery"
     ],
+    "uuid": "0e49e1c8-74f8-4bd1-88fc-dc1eb4e14aa7",
     "watchapp": {
       "watchface": false
-    },
-    "messageKeys": [
-      "dummy"
-    ],
-    "resources": {
-      "media": []
     }
-  }
+  },
+  "version": "0.0.1"
 }
