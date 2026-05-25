@@ -36,7 +36,6 @@ static AppTimer *s_auto_advance_timer;
 static char s_remaining_text[8];
 static char s_duration_text[8];
 static WakeupId s_wakeup_id = -1;
-static bool s_timer_expired_while_closed = false;
 
 static void play_timer(void);
 static void toggle_timer(void);
@@ -271,14 +270,6 @@ static void click_config_provider(void *context) {
 static void wakeup_handler(WakeupId wakeup_id, int32_t cookie) {
   s_wakeup_id = -1;
   persist_delete(PERSIST_KEY_WAKEUP_ID);
-
-  if (s_state.timer_state == TIMER_STATE_PLAYING ||
-      s_auto_advance_timer != NULL) {
-    return;
-  }
-
-  s_state.remaining_sec = 0;
-  sync_display();
   handle_timer_expired(true);
 }
 
@@ -408,13 +399,11 @@ static void load_state(void) {
       s_state.duration_sec = saved_state.duration_sec;
       s_state.timer_state = TIMER_STATE_PAUSED;
       s_state.remaining_sec = 0;
-      s_timer_expired_while_closed = true;
     }
-  } else if (saved_state.timer_state == TIMER_STATE_PAUSED &&
-             saved_state.remaining_sec == 0) {
-    s_state = saved_state;
-    s_timer_expired_while_closed = true;
-  } else {
+    return;
+  }
+
+  if (saved_state.timer_state == TIMER_STATE_PAUSED) {
     s_state = saved_state;
   }
 }
