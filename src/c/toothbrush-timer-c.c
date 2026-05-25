@@ -5,7 +5,10 @@
 #define SIDEBAR_WIDTH 30
 #define ICON_SLOT_COUNT 3
 #define AUTO_ADVANCE_DELAY_MS 2400
-#define PLAY_START_DELAY_MS 1000
+#define REMAINING_FONT_SIZE 42
+#define DURATION_FONT_SIZE 20
+// move icons?
+// better icons
 
 typedef enum { TIMER_STATE_PAUSED, TIMER_STATE_PLAYING } TimerState;
 
@@ -17,7 +20,8 @@ typedef struct {
 
 static AppState s_state;
 static Window *s_main_window;
-static TextLayer *s_timer_label;
+static TextLayer *s_remaining_label;
+static TextLayer *s_duration_label;
 static Layer *s_sidebar_layer;
 static BitmapLayer *s_reset_icon_layer;
 static BitmapLayer *s_toggle_icon_layer;
@@ -28,24 +32,25 @@ static GBitmap *s_reset_bitmap;
 static GBitmap *s_toggle_bitmap;
 static AppTimer *s_play_start_delay_timer;
 static AppTimer *s_auto_advance_timer;
-static char s_timer_text[8];
+static char s_remaining_text[8];
+static char s_duration_text[8];
 
 static void play_timer(void);
 static void toggle_timer(void);
 
-static void format_remaining_sec(void) {
-  int minutes = s_state.remaining_sec / 60;
-  int seconds = s_state.remaining_sec % 60;
-  if (minutes > 0) {
-    snprintf(s_timer_text, sizeof(s_timer_text), "%d:%02d", minutes, seconds);
-  } else {
-    snprintf(s_timer_text, sizeof(s_timer_text), "%02d", seconds);
-  }
+static void format_time(int sec, char *text_ptr, size_t text_size) {
+  int minutes = sec / 60;
+  int seconds = sec % 60;
+  snprintf(text_ptr, text_size, "%d:%02d", minutes, seconds);
 }
 
 static void sync_display(void) {
-  format_remaining_sec();
-  text_layer_set_text(s_timer_label, s_timer_text);
+  format_time(s_state.remaining_sec, s_remaining_text,
+              sizeof(s_remaining_text));
+  text_layer_set_text(s_remaining_label, s_remaining_text);
+
+  format_time(s_state.duration_sec, s_duration_text, sizeof(s_duration_text));
+  text_layer_set_text(s_duration_label, s_duration_text);
 }
 
 static void set_reset_icon_visible(bool visible) {
@@ -144,8 +149,12 @@ static void play_timer(void) {
   if (s_play_start_delay_timer) {
     app_timer_cancel(s_play_start_delay_timer);
   }
-  s_play_start_delay_timer =
-      app_timer_register(PLAY_START_DELAY_MS, begin_second_tick_callback, NULL);
+
+  uint16_t current_ms_into_second;
+  time_ms(NULL, &current_ms_into_second);
+  uint32_t ms_until_next_second = 1000 - current_ms_into_second;
+  s_play_start_delay_timer = app_timer_register(
+      ms_until_next_second, begin_second_tick_callback, NULL);
 }
 
 static void pause_timer(void) {
@@ -247,17 +256,33 @@ static void main_window_load(Window *window) {
 
   window_set_background_color(window, GColorYellow);
 
-  int timer_label_top = (root_bounds.size.h - 42) / 2;
-  GRect timer_label_rect =
+  int slot_height = root_bounds.size.h / ICON_SLOT_COUNT;
+  int timer_label_top = (slot_height - REMAINING_FONT_SIZE) / 2;
+  GRect remaining_label_rect =
       GRect(0, timer_label_top, root_bounds.size.w - SIDEBAR_WIDTH,
-            root_bounds.size.h);
-  s_timer_label = text_layer_create(timer_label_rect);
-  text_layer_set_background_color(s_timer_label, GColorClear);
-  text_layer_set_text_color(s_timer_label, GColorBlack);
-  text_layer_set_font(s_timer_label,
+            REMAINING_FONT_SIZE);
+
+  s_remaining_label = text_layer_create(remaining_label_rect);
+  text_layer_set_background_color(s_remaining_label, GColorClear);
+  text_layer_set_text_color(s_remaining_label, GColorBlack);
+  text_layer_set_font(s_remaining_label,
                       fonts_get_system_font(FONT_KEY_LECO_42_NUMBERS));
-  text_layer_set_text_alignment(s_timer_label, GTextAlignmentCenter);
-  layer_add_child(root_layer, text_layer_get_layer(s_timer_label));
+  text_layer_set_text_alignment(s_remaining_label, GTextAlignmentCenter);
+  layer_add_child(root_layer, text_layer_get_layer(s_remaining_label));
+
+  int duration_label_padding = 5;
+  GRect duration_label_rect =
+      GRect(duration_label_padding,
+            root_bounds.size.h - DURATION_FONT_SIZE - duration_label_padding,
+            root_bounds.size.w - SIDEBAR_WIDTH, DURATION_FONT_SIZE);
+
+  s_duration_label = text_layer_create(duration_label_rect);
+  text_layer_set_background_color(s_duration_label, GColorClear);
+  text_layer_set_text_color(s_duration_label, GColorBlack);
+  text_layer_set_font(s_duration_label,
+                      fonts_get_system_font(FONT_KEY_LECO_20_BOLD_NUMBERS));
+  text_layer_set_text_alignment(s_duration_label, GTextAlignmentLeft);
+  layer_add_child(root_layer, text_layer_get_layer(s_duration_label));
 
   GRect sidebar_rect = GRect(root_bounds.size.w - SIDEBAR_WIDTH, 0,
                              SIDEBAR_WIDTH, root_bounds.size.h);
@@ -293,7 +318,7 @@ static void main_window_load(Window *window) {
 }
 
 static void main_window_unload(Window *window) {
-  text_layer_destroy(s_timer_label);
+  text_layer_destroy(s_remaining_label);
   bitmap_layer_destroy(s_reset_icon_layer);
   bitmap_layer_destroy(s_toggle_icon_layer);
   bitmap_layer_destroy(s_play_pause_icon_layer);
