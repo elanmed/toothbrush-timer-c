@@ -118,7 +118,6 @@ static void schedule_wakeup(void) {
       wakeup_remaining_sec = s_state.remaining_sec - 30;
     }
   }
-  APP_LOG(APP_LOG_LEVEL_DEBUG, "wakeup_remaining_sec %d", wakeup_remaining_sec);
 
   s_wakeup_id = wakeup_schedule(time(NULL) + wakeup_remaining_sec, 0, false);
   if (s_wakeup_id >= 0) {
