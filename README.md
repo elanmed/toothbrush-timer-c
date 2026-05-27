@@ -1,36 +1,19 @@
-# toothbrush-timer-c
+# toothbrush-timer
 
-A Pebble watchapp/watchface written in C using the Pebble SDK.
+A simple timer for brushing your teeth, made for the Pebble watch.
 
-## Building & running
+## Features
 
-```sh
-pebble build                          # build for all targetPlatforms
-pebble install --emulator emery       # install on the emery emulator
-pebble install --phone <ip>           # install to a paired phone
-```
+The app runs two back-to-back timers: a 2-minute timer for brushing your teeth, and a 30-minute timer before you eat.
 
-## Target platforms
+During the 2-minute timer, the watch vibrates every 30 seconds to prompt you to switch quadrants, then auto-advances to the 30-minute timer when finished.
 
-`targetPlatforms` in `package.json` controls which watches you build for. The
-modern Pebble hardware is **emery** (Pebble Time 2), **gabbro** (Pebble Round
-2), and **flint** (Pebble 2 Duo); the original Pebble platforms (aplite,
-basalt, chalk, diorite) are included by default for backwards compatibility.
+## Acknowledgements
 
-## Project layout
+- The overall design is based on the official [timer app](https://github.com/coredevices/pebble-timer)
+- Icons are from the [pebble-dev/iconography](https://github.com/pebble-dev/iconography) repo
+  - `action_bar_icon_start`, `action_bar_icon_pause`, `action_bar_icon_stop`, `action_bar_icon_toggle`, and `Pebble_*x*_Pace`
 
-```
-src/c/           C source for the watchapp
-src/pkjs/        PebbleKit JS (phone-side) source, if any
-worker_src/c/    Background worker source, if any
-resources/       Images, fonts, and other bundled resources
-package.json     Project metadata (UUID, platforms, resources, message keys)
-wscript          Build rules — usually no need to edit
-```
+### TODO
 
-By default this project is configured as a watchapp. To make it a watchface,
-set `pebble.watchapp.watchface` to `true` in `package.json`.
-
-## Documentation
-
-Full SDK docs, tutorials, and API reference: <https://developer.repebble.com>
+- [ ] Support others aside from emery
